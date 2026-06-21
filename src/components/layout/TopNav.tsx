@@ -16,6 +16,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { tracks } from "@/data/tracks";
 import { cn } from "@/lib/utils";
 
+const vendorLinks = [
+  { to: "/tracks/cisco-ccna", label: "Cisco" },
+  { to: "/tracks/juniper-jncia", label: "Juniper" },
+  { to: "/tracks/fortinet-fca", label: "Fortinet" },
+];
+
 const primaryLinks = [
   { to: "/labs", label: "Labs" },
   { to: "/tools", label: "Tools" },
