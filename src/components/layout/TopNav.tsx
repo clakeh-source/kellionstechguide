@@ -16,6 +16,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { tracks } from "@/data/tracks";
 import { cn } from "@/lib/utils";
 
+const vendorLinks = [
+  { to: "/tracks/cisco-ccna", label: "Cisco" },
+  { to: "/tracks/juniper-jncia", label: "Juniper" },
+  { to: "/tracks/fortinet-fca", label: "Fortinet" },
+];
+
 const primaryLinks = [
   { to: "/labs", label: "Labs" },
   { to: "/tools", label: "Tools" },
@@ -62,6 +68,19 @@ export function TopNav() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {vendorLinks.map((l) => (
+            <NavLink
+              key={l.to}
+              to={l.to}
+              className={({ isActive }) =>
+                cn("rounded-md px-3 py-2 text-sm font-medium transition-colors hover:text-foreground",
+                  isActive ? "text-foreground" : "text-muted-foreground")
+              }
+            >
+              {l.label}
+            </NavLink>
+          ))}
 
           {primaryLinks.map((l) => (
             <NavLink
@@ -125,6 +144,13 @@ export function TopNav() {
                 {tracks.map((t) => (
                   <SheetClose asChild key={t.slug}>
                     <Link to={`/tracks/${t.slug}`} className="rounded-md px-3 py-2 text-sm hover:bg-accent">{t.title}</Link>
+                  </SheetClose>
+                ))}
+                <div className="my-3 h-px bg-border" />
+                <p className="px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vendors</p>
+                {vendorLinks.map((l) => (
+                  <SheetClose asChild key={l.to}>
+                    <Link to={l.to} className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent">{l.label}</Link>
                   </SheetClose>
                 ))}
                 <div className="my-3 h-px bg-border" />
