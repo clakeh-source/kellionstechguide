@@ -1,117 +1,98 @@
+# Rebuild as CertForge — Phase 1 Plan
 
-# Multi-Vendor Certification Learning Hub
+Rename the project from TechGuide to **CertForge** and rebuild the missing app shell, navigation, auth, dashboard, and vendor learning-path pages from scratch. The 7 existing tool pages stay.
 
-Reposition TechGuide as a learning-first platform centered on three certification tracks — **Cisco CCNA 200-301**, **Juniper JNCIA-Junos**, and **Fortinet FCA/FCF + NSE 4/FCP** — while keeping existing network tools available in a secondary "Utilities" area. AI tools expand to support all three vendors.
+## New name & branding
 
-> Note: the project filesystem is currently missing many files from a prior sync issue. This plan assumes the codebase is restored first (via Version History or GitHub re-sync). All work below targets the restored codebase.
+- Product name everywhere: **CertForge**
+- Tagline: *"Forge your networking certifications."*
+- Vendors covered: Cisco CCNA 200-301, Juniper JNCIA-Junos, Fortinet FCA/FCF, Fortinet NSE 4 / FCP
+- Visual direction: fresh modern light UI with vendor accent colors (Cisco blue, Juniper green, Fortinet red), forge-warm primary (amber/orange) for the brand itself
 
-## 1. Information Architecture
+## Design system
 
-### TopNav (global discovery / conversion)
-- **Certifications** ▾ — CCNA 200-301, JNCIA-Junos, Fortinet FCA/FCF, Fortinet NSE 4/FCP, "Compare tracks"
-- **Labs** ▾ — Virtual Labs (CLI), Packet Tracer Labs, Practice Exams, Troubleshooting Scenarios
-- **AI Study Helpers** ▾ — CLI Assistant (Cisco/Junos/FortiOS), Config Builder, ACL Builder, Switch Migration, Security Auditor
-- **Resources** ▾ — Knowledge Base, Subnetting Guide, Network Intelligence, Blog
-- **Utilities** ▾ (de-emphasized) — Subnet Calculator, Speed Test, DNS Lookup, Port Scanner, All Tools
-- **Pricing**, **Sign In / Get Started**
+- Tokens in `index.css` (HSL): `--background` near-white, `--foreground` slate-900, `--primary` forge amber (`28 90% 52%`), `--cisco` (`210 90% 45%`), `--juniper` (`150 65% 38%`), `--fortinet` (`0 75% 50%`)
+- Fonts via `@fontsource`: **Space Grotesk** (display/headings) + **DM Sans** (body)
+- Tailwind config extended with the tokens, gradients, and shadow utilities
+- shadcn/ui primitives restored (button, card, input, dropdown-menu, sheet, tabs, badge, dialog, sonner, tooltip, navigation-menu, etc.)
 
-### SideNav (in-app workspace, behind auth)
-- Dashboard
-- My Tracks (active cert → modules → lessons)
-- Labs (Virtual / Packet Tracer / Exams)
-- AI Helpers
-- Progress & Achievements
-- Settings
+## App shell
 
-## 2. Cert Track Structure
+- `main.tsx`, `App.tsx`, `index.css`, `vite-env.d.ts`
+- Router (`BrowserRouter`) with `React.lazy` + `Suspense` + `PageSkeleton` + `PageErrorBoundary`
+- `RootLayout` = sticky `TopNav` + `<Outlet/>` + `Footer`
+- `AppLayout` (authenticated workspace) = `SidebarProvider` + `AppSidebar` + header with `SidebarTrigger` + `<Outlet/>`
 
-Each track gets full parity with the existing CCNA Learning Lab engine:
+## Navigation
 
-```text
-/tracks/:vendor/:cert
-  ├── Overview + exam blueprint
-  ├── Modules (6–8 domains per cert)
-  │     └── Lessons (AI-assisted, marker-parsed)
-  ├── CLI Practice (vendor-specific syntax)
-  ├── Mock Exam (timed, scored)
-  └── Progress dashboard
-```
+**TopNav (global / discovery)**
+- Logo → `/`
+- Tracks dropdown: Cisco CCNA, Juniper JNCIA, Fortinet FCA/FCF, Fortinet NSE 4
+- Labs, Tools, Pricing, About, Blog
+- Right: Search, Sign In / Avatar menu, "Start free" CTA
+- Mobile: `Sheet` drawer
 
-Vendor mapping:
-- **Cisco CCNA 200-301** — reuse existing `/ccna-learning-lab`; alias under `/tracks/cisco/ccna`
-- **Juniper JNCIA-Junos** — new track, Junos CLI emulator profile (operational/configuration modes, commit, `show` hierarchy)
-- **Fortinet FCA / FCF** — entry track, FortiGate fundamentals, GUI-screenshot + CLI dual mode
-- **Fortinet NSE 4 / FCP** — advanced FortiGate, security profiles, VPN, SD-WAN
+**SideNav (workspace, authenticated routes only)**
+- Dashboard, My Tracks, Continue Learning, Labs, Practice Exams, Notes, Progress, Tools, Settings
+- `collapsible="icon"`, active route via `NavLink`, group containing active route stays open
 
-## 3. CLI Engine Extensions
+## Routes to (re)build
 
-Extend the Packet Tracer / CLI engine with per-vendor adapters:
-- `engines/cli/cisco-ios.ts` (existing)
-- `engines/cli/junos.ts` — hierarchical config, `set`/`delete`/`commit`, op vs config mode
-- `engines/cli/fortios.ts` — `config` blocks, `edit`/`next`/`end`, VDOM-aware prompts
+Public:
+- `/` Home (hero, 3 vendor cards, value props, featured labs, CTA)
+- `/tracks/cisco-ccna`, `/tracks/juniper-jncia`, `/tracks/fortinet-fca`, `/tracks/fortinet-nse4` — vendor landing pages with module outlines
+- `/labs`, `/labs/virtual`, `/labs/packet-tracer`, `/labs/practice-exams`
+- `/tools` (index of the 7 existing tool pages)
+- `/pricing`, `/about`, `/blog`, `/contact`, `/faq`
+- `/auth` (sign in / sign up)
+- `*` NotFound
 
-Shared: command history, tab completion, abbreviation, diagnostics engine.
+Workspace (auth-gated via `RequireAuth`):
+- `/app/dashboard`, `/app/tracks`, `/app/tracks/:vendor`, `/app/labs`, `/app/exams`, `/app/notes`, `/app/progress`, `/app/profile`, `/app/settings`
 
-## 4. AI Tools — Vendor Expansion
+Existing tool routes preserved: `/tool/cisco-cli-assistant`, `/tool/subnet-calculator`, `/tool/speed-test`, `/tool/atlas-asset-manager`, `/tool/smartnet-dashboards`, `/tool/smartnet-reports`, `/tool/smartnet-sensors`
 
-Update `supabase/functions/nextgen-ai/index.ts` system prompts to accept a `vendor` field (`cisco` | `juniper` | `fortinet`) for:
-- CLI Assistant
-- Config Builder (already supports 8 platforms — surface Juniper/Fortinet prominently)
-- ACL Builder (firewall-rule equivalent for Juniper `firewall` filters and FortiOS `policy`)
-- Security Auditor
-- Switch Migration (add Junos ⇄ IOS and FortiSwitch paths)
+## Auth + database (Lovable Cloud)
 
-Add a vendor selector in each tool's UI. Re-label section as "Cert Study Helpers".
+- Email/password + Google sign-in
+- `useAuth` hook (session + user, listens to `onAuthStateChange`)
+- Tables (with GRANTs + RLS):
+  - `profiles` (id, full_name, avatar_url, created_at) — user-owned
+  - `user_roles` + `app_role` enum + `has_role()` security-definer function (per platform rules)
+  - `track_progress` (user_id, vendor, module_slug, status, score, updated_at)
+  - `lab_attempts` (user_id, lab_slug, completed_at, duration_sec, score)
+- Trigger to auto-create a `profiles` row on signup
 
-## 5. Homepage / Landing
+## Dashboard scaffold
 
-- Hero: "Master Cisco, Juniper & Fortinet — One Learning Hub"
-- Three vendor cards (CCNA / JNCIA / Fortinet) → track landing pages
-- Secondary band: "Hands-on labs", "AI study helpers", "Free utilities"
-- Social proof, pricing teaser, CTA
+- Cards: "Continue Cisco CCNA", "Continue Juniper JNCIA", "Continue Fortinet"
+- Progress bars driven by `track_progress`
+- Recent lab attempts list
+- Quick links to tools
 
-## 6. Data & Content Files
+## SEO
 
-**New:**
-- `src/data/tracks/jncia.ts` — modules, lessons, CLI scenarios, exam questions
-- `src/data/tracks/fortinet-fca.ts`
-- `src/data/tracks/fortinet-nse4.ts`
-- `src/data/vendors.ts` — vendor metadata (name, logo, color accent, cert list)
-- `src/lib/cli/junos-engine.ts`
-- `src/lib/cli/fortios-engine.ts`
+- Centralized `seoData.ts` + `SEOHead` component
+- Unique title/desc per route, JSON-LD `Course` schema on vendor track pages
+- Updated `robots.txt` + `sitemap.xml` referencing new routes and the CertForge brand
+- Update `index.html` `<title>` and meta to CertForge
 
-**Edit:**
-- `src/components/marketing/SiteHeader.tsx` — new dropdown structure
-- `src/components/marketing/SiteFooter.tsx` — vendor columns
-- `src/data/toolsData.ts` — add vendor tags, regroup
-- `src/data/seoData.ts` — entries for each track + vendor landing
-- `src/App.tsx` — routes `/tracks/:vendor/:cert/*`
-- `src/pages/Dashboard.tsx` — multi-track progress
-- `src/pages/CCNALearningLab.tsx` — generalize into `<TrackEngine vendor cert />`
-- `supabase/functions/nextgen-ai/index.ts` — vendor-aware prompts
+## Out of scope (later phases)
 
-**New pages:**
-- `src/pages/tracks/VendorLanding.tsx` (Cisco / Juniper / Fortinet hubs)
-- `src/pages/tracks/CertTrack.tsx` (generic track shell)
-- `src/pages/tracks/CompareTracks.tsx`
+- Full lab content/exercises beyond outline stubs
+- Payment integration (Pricing page is informational only)
+- AI assistant integrations beyond placeholders
 
-## 7. Phased Rollout
+## Verification
 
-1. **Phase 1 — Navigation + scaffolding** (no content yet)
-   - New TopNav, vendor landing pages, route shells, SEO entries, homepage refocus.
-2. **Phase 2 — JNCIA track (full parity)**
-   - Junos CLI engine, lessons, mock exam, AI vendor switch for Junos.
-3. **Phase 3 — Fortinet FCA/FCF track**
-   - FortiOS CLI engine, lessons, GUI-style screenshots, mock exam.
-4. **Phase 4 — Fortinet NSE 4 / FCP track**
-   - Advanced modules (VPN, SD-WAN, FortiAnalyzer integration scenarios).
-5. **Phase 5 — Polish**
-   - Unified progress dashboard, cross-vendor comparisons, leaderboard updates.
+- Build is green (`vite build`)
+- Manual click-through of every route at desktop + mobile widths
+- Logged-out and logged-in states render correctly
+- Keyboard tab order through TopNav and SideNav
+- Active nav highlight matches current route
+- No duplicate or dead links
 
-## 8. Out of Scope (this plan)
-- Payments/pricing changes (existing tiers stand; Pro unlocks all vendors).
-- Mobile native apps.
-- Live instructor sessions.
+## Deliverable summary at the end
 
-## 9. Prerequisite
-Restore the project files (Version History or GitHub re-sync) before implementation. Once restored, Phase 1 can ship in a single iteration; Phases 2–4 each ship as their own iteration.
+- List of routes shipped vs. stubs
+- List of routes that still need real content
