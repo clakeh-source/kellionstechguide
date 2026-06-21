@@ -147,6 +147,13 @@ export function TopNav() {
                   </SheetClose>
                 ))}
                 <div className="my-3 h-px bg-border" />
+                <p className="px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vendors</p>
+                {vendorLinks.map((l) => (
+                  <SheetClose asChild key={l.to}>
+                    <Link to={l.to} className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent">{l.label}</Link>
+                  </SheetClose>
+                ))}
+                <div className="my-3 h-px bg-border" />
                 {primaryLinks.map((l) => (
                   <SheetClose asChild key={l.to}>
                     <Link to={l.to} className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent">{l.label}</Link>
