@@ -12,6 +12,16 @@ export interface Step {
   expect: string | RegExp;
   success: string;
   hint?: string;
+  /** Canonical example command shown by the AI coach when the user gets stuck. */
+  example: string;
+  /** Optional per-step diagnosis rules: if the typed command matches `when`, show `reason`. */
+  diagnose?: { when: RegExp; reason: string }[];
+}
+
+export interface CoachHint {
+  reason: string;
+  suggestion: string;
+  example: string;
 }
 
 export interface Scenario {
