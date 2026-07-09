@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import type { HistoryEntry, Scenario } from "./types";
+import type { CoachHint, HistoryEntry, Scenario, Step } from "./types";
 
 function matches(pattern: string | RegExp, input: string): boolean {
   if (typeof pattern === "string") return pattern.toLowerCase() === input.toLowerCase();
@@ -12,9 +12,52 @@ function vendorError(vendor: Scenario["vendor"]): string {
   return "Command fail. Return code -61";
 }
 
+function buildHint(
+  scenario: Scenario,
+  step: Step | undefined,
+  cmd: string,
+  recognized: boolean,
+): CoachHint | null {
+  if (!step) return null;
+
+  // Rule 1: per-step diagnose patterns
+  const diag = step.diagnose?.find((d) => d.when.test(cmd));
+  if (diag) {
+    return {
+      reason: diag.reason,
+      suggestion: `Try the expected command for this step:`,
+      example: step.example,
+    };
+  }
+
+  // Rule 2: command wasn't recognized at all
+  if (!recognized) {
+    return {
+      reason: `That command isn't valid ${labelFor(scenario.vendor)} syntax in this context.`,
+      suggestion: `The current step wants you to ${lowerFirst(step.instruction)}`,
+      example: step.example,
+    };
+  }
+
+  // Rule 3: recognized but not the step we're on
+  return {
+    reason: `That's a real command, but it doesn't complete the current step.`,
+    suggestion: `Focus on the step: ${lowerFirst(step.instruction)}`,
+    example: step.example,
+  };
+}
+
+function labelFor(v: Scenario["vendor"]) {
+  return v === "cisco" ? "Cisco IOS" : v === "juniper" ? "Junos" : "FortiOS";
+}
+function lowerFirst(s: string) {
+  return s.charAt(0).toLowerCase() + s.slice(1).replace(/\.$/, "");
+}
+
 export function useCliEngine(scenario: Scenario) {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [stepIndex, setStepIndex] = useState(0);
+  const [hint, setHint] = useState<CoachHint | null>(null);
   const [mode, setMode] = useState<string>(
     scenario.vendor === "cisco" ? "user" : scenario.vendor === "juniper" ? "operational" : "exec"
   );
@@ -51,12 +94,16 @@ export function useCliEngine(scenario: Scenario) {
         outputLines = [vendorError(scenario.vendor)];
       }
 
-      // Check step advancement
       const step = scenario.steps[stepIndex];
+      const advances = !!step && matches(step.expect, cmd);
+
       let successLine: string | null = null;
-      if (step && matches(step.expect, cmd)) {
-        successLine = `✓ ${step.success}`;
+      if (advances) {
+        successLine = `✓ ${step!.success}`;
         setStepIndex((i) => i + 1);
+        setHint(null);
+      } else if (!completed) {
+        setHint(buildHint(scenario, step, cmd, !!match));
       }
 
       setHistory((h) => [
@@ -64,16 +111,18 @@ export function useCliEngine(scenario: Scenario) {
         { prompt: currentPrompt, cmd, output: successLine ? [...outputLines, successLine] : outputLines },
       ]);
     },
-    [prompt, scenario, stepIndex]
+    [prompt, scenario, stepIndex, completed]
   );
 
   const reset = useCallback(() => {
     setHistory([]);
     setStepIndex(0);
+    setHint(null);
     setMode(scenario.vendor === "cisco" ? "user" : scenario.vendor === "juniper" ? "operational" : "exec");
   }, [scenario]);
 
   const clear = useCallback(() => setHistory([]), []);
+  const dismissHint = useCallback(() => setHint(null), []);
 
-  return { history, prompt, run, reset, clear, stepIndex, completed };
+  return { history, prompt, run, reset, clear, stepIndex, completed, hint, dismissHint };
 }
