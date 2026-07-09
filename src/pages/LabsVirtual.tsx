@@ -17,9 +17,11 @@ function LabPane({ vendor }: { vendor: Vendor }) {
       <CliTerminal
         prompt={engine.prompt}
         history={engine.history}
+        hint={engine.hint}
         onRun={engine.run}
         onClear={engine.clear}
         onReset={engine.reset}
+        onDismissHint={engine.dismissHint}
       />
     </div>
   );

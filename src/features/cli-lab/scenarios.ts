@@ -8,12 +8,54 @@ export const ciscoScenario: Scenario = {
   intro:
     "Users on VLAN 10 cannot reach the gateway. Gi0/1 appears administratively down on R1. Bring the interface back online and verify connectivity.",
   steps: [
-    { instruction: "Enter privileged EXEC mode.", expect: /^en(able)?$/i, success: "You are now in privileged EXEC mode." },
-    { instruction: "List interface status to confirm Gi0/1 is down.", expect: /^sh(ow)?\s+ip\s+int(erface)?\s+br(ief)?$/i, success: "Confirmed: Gi0/1 is administratively down." },
-    { instruction: "Enter global configuration mode.", expect: /^conf(igure)?\s+t(erminal)?$/i, success: "Now in global config." },
-    { instruction: "Select interface GigabitEthernet0/1.", expect: /^int(erface)?\s+gi(gabitethernet)?\s*0\/1$/i, success: "Interface selected." },
-    { instruction: "Bring the interface up.", expect: /^no\s+shut(down)?$/i, success: "Interface enabled." },
-    { instruction: "Return to privileged EXEC and verify it is up/up.", expect: /^sh(ow)?\s+int(erface)?\s+gi(gabitethernet)?\s*0\/1$/i, success: "Gi0/1 is up/up. Lab complete." },
+    {
+      instruction: "Enter privileged EXEC mode.",
+      expect: /^en(able)?$/i,
+      success: "You are now in privileged EXEC mode.",
+      example: "enable",
+      diagnose: [
+        { when: /^conf/i, reason: "You need privileged EXEC (R1#) before you can enter config mode." },
+      ],
+    },
+    {
+      instruction: "List interface status to confirm Gi0/1 is down.",
+      expect: /^sh(ow)?\s+ip\s+int(erface)?\s+br(ief)?$/i,
+      success: "Confirmed: Gi0/1 is administratively down.",
+      example: "show ip interface brief",
+    },
+    {
+      instruction: "Enter global configuration mode.",
+      expect: /^conf(igure)?\s+t(erminal)?$/i,
+      success: "Now in global config.",
+      example: "configure terminal",
+      diagnose: [
+        { when: /^int/i, reason: "Select the interface only after you are inside global config (R1(config)#)." },
+      ],
+    },
+    {
+      instruction: "Select interface GigabitEthernet0/1.",
+      expect: /^int(erface)?\s+gi(gabitethernet)?\s*0\/1$/i,
+      success: "Interface selected.",
+      example: "interface gi0/1",
+      diagnose: [
+        { when: /^no\s+shut/i, reason: "You must first select the interface before shutting it up or down." },
+      ],
+    },
+    {
+      instruction: "Bring the interface up.",
+      expect: /^no\s+shut(down)?$/i,
+      success: "Interface enabled.",
+      example: "no shutdown",
+      diagnose: [
+        { when: /^shut/i, reason: "`shutdown` disables the interface — you want the opposite here." },
+      ],
+    },
+    {
+      instruction: "Return to privileged EXEC and verify it is up/up.",
+      expect: /^sh(ow)?\s+int(erface)?\s+gi(gabitethernet)?\s*0\/1$/i,
+      success: "Gi0/1 is up/up. Lab complete.",
+      example: "show interface gi0/1",
+    },
   ],
   commands: [
     { match: /^en(able)?$/i, output: "", mode: "enable" },
@@ -55,11 +97,46 @@ export const juniperScenario: Scenario = {
   intro:
     "Enable OSPF on ge-0/0/0 in area 0, review the candidate config, then commit the change safely.",
   steps: [
-    { instruction: "Enter configuration mode.", expect: /^configure$/i, success: "You are in configuration mode." },
-    { instruction: "Add ge-0/0/0 to OSPF area 0.", expect: /^set\s+protocols\s+ospf\s+area\s+0(\.0\.0\.0)?\s+interface\s+ge-0\/0\/0$/i, success: "Statement added to candidate config." },
-    { instruction: "Review the pending change.", expect: /^show\s+\|\s+compare$/i, success: "Candidate diff displayed." },
-    { instruction: "Validate the candidate config.", expect: /^commit\s+check$/i, success: "Configuration check succeeded." },
-    { instruction: "Commit the change.", expect: /^commit$/i, success: "Commit complete. Lab done." },
+    {
+      instruction: "Enter configuration mode.",
+      expect: /^configure$/i,
+      success: "You are in configuration mode.",
+      example: "configure",
+      diagnose: [
+        { when: /^set\s+/i, reason: "`set` statements only work inside configuration mode. Enter it first." },
+        { when: /^commit/i, reason: "You need to be in configuration mode before you can commit anything." },
+      ],
+    },
+    {
+      instruction: "Add ge-0/0/0 to OSPF area 0.",
+      expect: /^set\s+protocols\s+ospf\s+area\s+0(\.0\.0\.0)?\s+interface\s+ge-0\/0\/0$/i,
+      success: "Statement added to candidate config.",
+      example: "set protocols ospf area 0 interface ge-0/0/0",
+    },
+    {
+      instruction: "Review the pending change.",
+      expect: /^show\s+\|\s+compare$/i,
+      success: "Candidate diff displayed.",
+      example: "show | compare",
+      diagnose: [
+        { when: /^commit/i, reason: "Review the diff first with `show | compare` before validating or committing." },
+      ],
+    },
+    {
+      instruction: "Validate the candidate config.",
+      expect: /^commit\s+check$/i,
+      success: "Configuration check succeeded.",
+      example: "commit check",
+      diagnose: [
+        { when: /^commit$/i, reason: "Run `commit check` first to validate before an actual commit." },
+      ],
+    },
+    {
+      instruction: "Commit the change.",
+      expect: /^commit$/i,
+      success: "Commit complete. Lab done.",
+      example: "commit",
+    },
   ],
   commands: [
     { match: /^cli$/i, output: "", mode: "operational" },
@@ -99,12 +176,48 @@ export const fortinetScenario: Scenario = {
   intro:
     "Traffic from 10.0.0.5 to 8.8.8.8 is being dropped. Use the flow-trace diagnostic to find which policy is denying it.",
   steps: [
-    { instruction: "Verify the system is running.", expect: /^get\s+system\s+status$/i, success: "FortiGate is online." },
-    { instruction: "Set the flow filter for source 10.0.0.5.", expect: /^diagnose\s+debug\s+flow\s+filter\s+saddr\s+10\.0\.0\.5$/i, success: "Filter applied." },
-    { instruction: "Send debug output to the console.", expect: /^diagnose\s+debug\s+flow\s+show\s+console\s+enable$/i, success: "Console output enabled." },
-    { instruction: "Enable debug globally.", expect: /^diagnose\s+debug\s+enable$/i, success: "Debug enabled." },
-    { instruction: "Start the trace for 5 packets.", expect: /^diagnose\s+debug\s+flow\s+trace\s+start\s+5$/i, success: "Trace shows policy 0 (implicit deny). Add an allow policy to fix." },
-    { instruction: "Disable debug when finished.", expect: /^diagnose\s+debug\s+disable$/i, success: "Debug disabled. Lab complete." },
+    {
+      instruction: "Verify the system is running.",
+      expect: /^get\s+system\s+status$/i,
+      success: "FortiGate is online.",
+      example: "get system status",
+    },
+    {
+      instruction: "Set the flow filter for source 10.0.0.5.",
+      expect: /^diagnose\s+debug\s+flow\s+filter\s+saddr\s+10\.0\.0\.5$/i,
+      success: "Filter applied.",
+      example: "diagnose debug flow filter saddr 10.0.0.5",
+      diagnose: [
+        { when: /^diagnose\s+debug\s+flow\s+trace\s+start/i, reason: "You need to set a flow filter before starting the trace, otherwise you'll see every packet." },
+      ],
+    },
+    {
+      instruction: "Send debug output to the console.",
+      expect: /^diagnose\s+debug\s+flow\s+show\s+console\s+enable$/i,
+      success: "Console output enabled.",
+      example: "diagnose debug flow show console enable",
+    },
+    {
+      instruction: "Enable debug globally.",
+      expect: /^diagnose\s+debug\s+enable$/i,
+      success: "Debug enabled.",
+      example: "diagnose debug enable",
+    },
+    {
+      instruction: "Start the trace for 5 packets.",
+      expect: /^diagnose\s+debug\s+flow\s+trace\s+start\s+5$/i,
+      success: "Trace shows policy 0 (implicit deny). Add an allow policy to fix.",
+      example: "diagnose debug flow trace start 5",
+    },
+    {
+      instruction: "Disable debug when finished.",
+      expect: /^diagnose\s+debug\s+disable$/i,
+      success: "Debug disabled. Lab complete.",
+      example: "diagnose debug disable",
+      diagnose: [
+        { when: /^diagnose\s+debug\s+reset/i, reason: "`reset` clears filters — use `disable` to stop debug output cleanly." },
+      ],
+    },
   ],
   commands: [
     {

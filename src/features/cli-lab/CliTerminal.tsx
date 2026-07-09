@@ -1,26 +1,43 @@
-import { useEffect, useRef, useState, KeyboardEvent } from "react";
+import { useEffect, useImperativeHandle, useRef, useState, KeyboardEvent, forwardRef } from "react";
 import { Button } from "@/components/ui/button";
 import { RotateCcw, Eraser } from "lucide-react";
-import type { HistoryEntry } from "./types";
+import type { CoachHint, HistoryEntry } from "./types";
+import { CoachHintCard } from "./CoachHintCard";
 
 interface Props {
   prompt: string;
   history: HistoryEntry[];
+  hint: CoachHint | null;
   onRun: (cmd: string) => void;
   onClear: () => void;
   onReset: () => void;
+  onDismissHint: () => void;
 }
 
-export function CliTerminal({ prompt, history, onRun, onClear, onReset }: Props) {
+export interface CliTerminalHandle {
+  insert: (cmd: string) => void;
+}
+
+export const CliTerminal = forwardRef<CliTerminalHandle, Props>(function CliTerminal(
+  { prompt, history, hint, onRun, onClear, onReset, onDismissHint },
+  ref,
+) {
   const [value, setValue] = useState("");
   const [cmdHistory, setCmdHistory] = useState<string[]>([]);
   const [hIdx, setHIdx] = useState<number>(-1);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  useImperativeHandle(ref, () => ({
+    insert: (cmd: string) => {
+      setValue(cmd);
+      inputRef.current?.focus();
+    },
+  }));
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
-  }, [history]);
+  }, [history, hint]);
 
   const submit = () => {
     if (!value.trim()) return;
@@ -77,29 +94,43 @@ export function CliTerminal({ prompt, history, onRun, onClear, onReset }: Props)
 
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto px-4 py-3 font-mono text-[13px] leading-relaxed"
+        className="flex-1 overflow-y-auto font-mono text-[13px] leading-relaxed"
         onClick={() => inputRef.current?.focus()}
       >
-        {history.length === 0 && (
-          <p className="text-slate-500">Type a command and press Enter. Use ↑/↓ for history.</p>
-        )}
-        {history.map((entry, i) => (
-          <div key={i} className="mb-1">
-            <div>
-              <span className="text-emerald-400">{entry.prompt}</span>
-              <span className="text-amber-300"> {entry.cmd}</span>
-            </div>
-            {entry.output.map((line, j) => (
-              <div
-                key={j}
-                className={line.startsWith("✓") ? "text-emerald-400" : "text-slate-200 whitespace-pre"}
-              >
-                {line}
+        <div className="px-4 py-3">
+          {history.length === 0 && (
+            <p className="text-slate-500">Type a command and press Enter. Use ↑/↓ for history.</p>
+          )}
+          {history.map((entry, i) => (
+            <div key={i} className="mb-1">
+              <div>
+                <span className="text-emerald-400">{entry.prompt}</span>
+                <span className="text-amber-300"> {entry.cmd}</span>
               </div>
-            ))}
-          </div>
-        ))}
-        <div className="flex items-center">
+              {entry.output.map((line, j) => (
+                <div
+                  key={j}
+                  className={line.startsWith("✓") ? "text-emerald-400" : "text-slate-200 whitespace-pre"}
+                >
+                  {line}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        {hint && (
+          <CoachHintCard
+            hint={hint}
+            onDismiss={onDismissHint}
+            onInsert={(cmd) => {
+              setValue(cmd);
+              inputRef.current?.focus();
+            }}
+          />
+        )}
+
+        <div className="flex items-center px-4 pb-3">
           <span className="text-emerald-400 font-mono">{prompt}</span>
           <input
             ref={inputRef}
@@ -116,4 +147,4 @@ export function CliTerminal({ prompt, history, onRun, onClear, onReset }: Props)
       </div>
     </div>
   );
-}
+});
