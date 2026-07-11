@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, FlaskConical, BrainCircuit, Sparkles, ShieldCheck, Flame, Terminal } from "lucide-react";
+import { ArrowRight, FlaskConical, BrainCircuit, Sparkles, ShieldCheck, Flame, Terminal, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SEO } from "@/components/SEO";
 import { tracks } from "@/data/tracks";
+import { products, formatPrice } from "@/data/products";
+
 
 export default function Home() {
   return (
@@ -109,6 +111,57 @@ Neighbor ID     Pri   State        Dead Time   Address
               <CardContent className="text-sm text-muted-foreground">{f.body}</CardContent>
             </Card>
           ))}
+        </div>
+      </section>
+
+      <section className="container py-20">
+        <div className="flex items-end justify-between mb-10 gap-6 flex-wrap">
+          <div className="space-y-2 max-w-2xl">
+            <Badge variant="outline">Products</Badge>
+            <h2 className="text-3xl md:text-4xl font-display font-bold">Purpose-built Cisco products</h2>
+            <p className="text-muted-foreground">A simulator, question banks, and guided labs — plus a free-tools shelf that never asks for your card.</p>
+          </div>
+          <Button variant="outline" asChild><Link to="/products">All products <ArrowRight className="h-4 w-4" /></Link></Button>
+        </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {products.map((p) => (
+            <Link key={p.slug} to={`/products/${p.slug}`} className="group">
+              <Card className="h-full transition-all hover:-translate-y-1 hover:shadow-lg">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="grid h-10 w-10 place-items-center rounded-lg bg-accent text-accent-foreground">
+                      <p.icon className="h-5 w-5" />
+                    </div>
+                    <Badge variant="cisco">Cisco</Badge>
+                  </div>
+                  <CardTitle className="mt-3 text-lg">{p.name}</CardTitle>
+                  <CardDescription>{p.tagline}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <p className="text-sm text-muted-foreground">From <span className="font-semibold text-foreground">{formatPrice(p.fromPriceCents)}</span></p>
+                  <p className="text-sm font-medium text-primary inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                    View details <ArrowRight className="h-4 w-4" />
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+          <Link to="/free-tools" className="group">
+            <Card className="h-full border-dashed transition-all hover:-translate-y-1 hover:shadow-lg">
+              <CardHeader>
+                <div className="grid h-10 w-10 place-items-center rounded-lg bg-accent text-accent-foreground">
+                  <Wrench className="h-5 w-5" />
+                </div>
+                <CardTitle className="mt-3 text-lg">Free Tools</CardTitle>
+                <CardDescription>Subnet calculator, CLI cheat sheet, cert-path quiz.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm font-medium text-primary inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                  Open free tools <ArrowRight className="h-4 w-4" />
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
       </section>
 

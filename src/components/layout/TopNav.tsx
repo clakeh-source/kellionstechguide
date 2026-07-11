@@ -1,6 +1,6 @@
 import { Link, NavLink } from "react-router-dom";
 import { useState } from "react";
-import { Menu, ChevronDown, Flame, LogIn } from "lucide-react";
+import { Menu, ChevronDown, Flame, LogIn, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import {
@@ -13,7 +13,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
+import { useCart } from "@/hooks/useCart";
 import { tracks } from "@/data/tracks";
+import { products } from "@/data/products";
 import { cn } from "@/lib/utils";
 
 const vendorLinks = [
@@ -24,20 +26,20 @@ const vendorLinks = [
 
 const primaryLinks = [
   { to: "/labs", label: "Labs" },
-  { to: "/tools", label: "Tools" },
+  { to: "/free-tools", label: "Free Tools" },
   { to: "/pricing", label: "Pricing" },
-  { to: "/blog", label: "Blog" },
   { to: "/about", label: "About" },
 ];
 
 export function TopNav() {
   const { user, signOut } = useAuth();
-  const [open, setOpen] = useState(false);
+  const { count, open } = useCart();
+  const [menuOpen, setMenuOpen] = useState(false);
   const initials = user?.email?.[0]?.toUpperCase() ?? "U";
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="container flex h-16 items-center gap-6">
+      <div className="container flex h-16 items-center gap-4">
         <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold">
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-forge text-primary-foreground shadow-md">
             <Flame className="h-5 w-5" />
@@ -69,6 +71,33 @@ export function TopNav() {
             </DropdownMenuContent>
           </DropdownMenu>
 
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="gap-1">
+                Products <ChevronDown className="h-4 w-4 opacity-60" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-80">
+              <DropdownMenuLabel>Cisco products</DropdownMenuLabel>
+              {products.map((p) => (
+                <DropdownMenuItem key={p.slug} asChild>
+                  <Link to={`/products/${p.slug}`} className="flex items-start gap-3">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-accent text-accent-foreground">
+                      <p.icon className="h-4 w-4" />
+                    </span>
+                    <span className="flex flex-col items-start gap-0.5">
+                      <span className="font-medium">{p.name}</span>
+                      <span className="text-xs text-muted-foreground">{p.tagline}</span>
+                    </span>
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild><Link to="/products">All products →</Link></DropdownMenuItem>
+              <DropdownMenuItem asChild><Link to="/free-tools">Free tools (no cart)</Link></DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {vendorLinks.map((l) => (
             <NavLink
               key={l.to}
@@ -97,6 +126,15 @@ export function TopNav() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="relative" aria-label="Open cart" onClick={open}>
+            <ShoppingCart className="h-5 w-5" />
+            {count > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 grid place-items-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
+                {count}
+              </span>
+            )}
+          </Button>
+
           {user ? (
             <>
               <Button variant="ghost" asChild className="hidden sm:inline-flex">
@@ -132,13 +170,13 @@ export function TopNav() {
             </>
           )}
 
-          <Sheet open={open} onOpenChange={setOpen}>
+          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-80">
+            <SheetContent side="right" className="w-80 overflow-y-auto">
               <div className="mt-8 flex flex-col gap-1">
                 <p className="px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tracks</p>
                 {tracks.map((t) => (
@@ -146,6 +184,16 @@ export function TopNav() {
                     <Link to={`/tracks/${t.slug}`} className="rounded-md px-3 py-2 text-sm hover:bg-accent">{t.title}</Link>
                   </SheetClose>
                 ))}
+                <div className="my-3 h-px bg-border" />
+                <p className="px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Products</p>
+                {products.map((p) => (
+                  <SheetClose asChild key={p.slug}>
+                    <Link to={`/products/${p.slug}`} className="rounded-md px-3 py-2 text-sm hover:bg-accent">{p.name}</Link>
+                  </SheetClose>
+                ))}
+                <SheetClose asChild>
+                  <Link to="/products" className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent">All products</Link>
+                </SheetClose>
                 <div className="my-3 h-px bg-border" />
                 <p className="px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vendors</p>
                 {vendorLinks.map((l) => (
