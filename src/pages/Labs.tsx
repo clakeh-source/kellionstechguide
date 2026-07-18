@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
-import { FlaskConical, Network, FileQuestion, ArrowRight } from "lucide-react";
+import { FlaskConical, Network, FileQuestion, ArrowRight, Cpu } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SEO } from "@/components/SEO";
 
 const sections = [
   { to: "/labs/virtual", icon: FlaskConical, title: "Virtual labs", desc: "CLI scenarios across Cisco, Juniper, and Fortinet — practice in your browser." },
+  { to: "/labs/simulator", icon: Cpu, title: "Cisco Network Simulator", desc: "Drag-and-drop routers, switches, and PCs. Configure IOS and watch packet flow." },
   { to: "/labs/packet-tracer", icon: Network, title: "Packet Tracer labs", desc: "Topology-driven labs with step-by-step instructions and verification." },
   { to: "/labs/practice-exams", icon: FileQuestion, title: "Practice exams", desc: "Timed mock exams that mirror the real blueprint, with weak-area analysis." },
 ];

@@ -16,6 +16,7 @@ const Labs = lazy(() => import("@/pages/Labs"));
 const LabsVirtual = lazy(() => import("@/pages/LabsVirtual"));
 const LabsPacketTracer = lazy(() => import("@/pages/LabsPacketTracer"));
 const LabsExams = lazy(() => import("@/pages/LabsExams"));
+const LabsSimulator = lazy(() => import("@/pages/LabsSimulator"));
 const Tools = lazy(() => import("@/pages/Tools"));
 const Pricing = lazy(() => import("@/pages/Pricing"));
 const About = lazy(() => import("@/pages/About"));
@@ -72,6 +73,7 @@ export default function App() {
                 <Route path="labs/virtual" element={<LabsVirtual />} />
                 <Route path="labs/packet-tracer" element={<LabsPacketTracer />} />
                 <Route path="labs/practice-exams" element={<LabsExams />} />
+                <Route path="labs/simulator" element={<LabsSimulator />} />
                 <Route path="tools" element={<Tools />} />
                 <Route path="products" element={<Products />} />
                 <Route path="products/:slug" element={<ProductDetail />} />
