@@ -26,6 +26,7 @@ const vendorLinks = [
 
 const primaryLinks = [
   { to: "/labs", label: "Labs" },
+  { to: "/labs/simulator", label: "Simulator" },
   { to: "/free-tools", label: "Free Tools" },
   { to: "/pricing", label: "Pricing" },
   { to: "/about", label: "About" },
