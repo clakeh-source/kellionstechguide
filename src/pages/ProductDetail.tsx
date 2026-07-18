@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useParams, Navigate } from "react-router-dom";
-import { Check, ShoppingCart, ArrowLeft } from "lucide-react";
+import { Check, ShoppingCart, ArrowLeft, PlayCircle } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
