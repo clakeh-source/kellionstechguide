@@ -19,9 +19,9 @@ export default function Labs() {
         <header className="max-w-2xl mb-12 space-y-3">
           <Badge variant="outline">Labs</Badge>
           <h1 className="text-4xl font-display font-bold tracking-tight">Hands-on practice that builds real skill</h1>
-          <p className="text-muted-foreground">Three lab modes, vendor-accurate, mapped to every track.</p>
+          <p className="text-muted-foreground">Four lab modes, vendor-accurate, mapped to every track.</p>
         </header>
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {sections.map((s) => (
             <Link key={s.to} to={s.to} className="group">
               <Card className="h-full transition-all hover:-translate-y-1 hover:shadow-lg">
