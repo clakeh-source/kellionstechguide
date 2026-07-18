@@ -128,6 +128,11 @@ export default function ProductDetail() {
               >
                 <ShoppingCart className="h-4 w-4" /> Add to cart — {selectedTier && formatPrice(selectedTier.priceCents)}
               </Button>
+              {product.slug === "cisco-network-simulator" && (
+                <Button asChild variant="outline" size="sm" className="w-full">
+                  <Link to="/labs/simulator"><PlayCircle className="h-4 w-4" /> Try the free preview</Link>
+                </Button>
+              )}
               <p className="text-xs text-muted-foreground text-center">Instant access after checkout.</p>
             </CardContent>
           </Card>
