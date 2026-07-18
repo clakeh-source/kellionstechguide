@@ -219,10 +219,13 @@ export function simulatePing(topo: Topology, srcId: string, dstIp: string): Ping
       egressPort = "eth0";
     } else if (isL3(currentDevice)) {
       const cfg = currentDevice.config as RouterConfig | SwitchL3Config;
-      const route = longestPrefixMatch(cfg, nextHopIp);
-      if (!route) return { ok: false, path, reason: `${currentDevice.name}: no route to ${nextHopIp}` };
+      // At an L3 device, route toward the final destination (not the L2 next-hop that got us here).
+      const route = longestPrefixMatch(cfg, dstIp);
+      if (!route) return { ok: false, path, reason: `${currentDevice.name}: no route to ${dstIp}` };
       egressPort = route.egressIface;
-      if (route.nextHop) nextHopIpForNext = route.nextHop;
+      // The new L2 target: explicit next-hop for static routes, otherwise the final destination
+      // (which is directly connected on the egress interface).
+      nextHopIpForNext = route.nextHop ?? dstIp;
 
       // If egress is an SVI (VlanX) — enter L2 fabric on that VLAN
       if (egressPort.startsWith("Vlan")) {
