@@ -60,8 +60,8 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <CartProvider>
         <Toaster position="top-right" richColors />
-        <CartDrawer />
         <BrowserRouter>
+          <CartDrawer />
           <Suspense fallback={<Loading />}>
             <Routes>
               <Route element={<RootLayout />}>
